@@ -1,6 +1,6 @@
 # Comment Vibe Analyzer ✨
 
-[![Deployed with Vercel](https://vercel.com/button)](YOUR_VERCEL_DEPLOYMENT_URL) A full-stack web application that analyzes the "vibe" (sentiment and tone) of user-provided text using the Google Perspective API, presenting results in a user-friendly interface.
+A full-stack web application that analyzes the "vibe" (sentiment and tone) of user-provided text using the Google Perspective API, presenting results in a user-friendly interface.
 
 
 
