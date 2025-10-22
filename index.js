@@ -4,90 +4,144 @@ require('dotenv').config();
 // 1. Zaroori packages ko import karna
 const express = require('express');
 const axios = require('axios'); // 'axios' ko import kiya
+const cors = require('cors'); // CORS package import kiya
+const path = require('path'); // File paths ke liye zaroori
 
 // 2. Express app ko initialize karna
 const app = express();
 
-// 3. Port define karna (jahan server chalega)
+// 3. Port/Host define karna
 const PORT = process.env.PORT || 3000;
-
-// ----- NAYA CODE (HOST BINDING) -----
-// Hum host ko '0.0.0.0' par set kar rahe hain taake yeh public requests accept kare
 const HOST = '0.0.0.0';
-// ----- NAYA CODE KHATAM -----
 
-// .env file se API key haasil karna
+// 4. API Keys aur URLs
 const API_KEY = process.env.PERSPECTIVE_API_KEY;
-// Google API ka URL
 const API_URL = `https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key=${API_KEY}`;
+const CHAR_LIMIT = 19000; // Google API ki limit
 
-// Middleware: Express ko batana ke woh JSON ko parse (samajh) sake
-app.use(express.json());
+// 5. Middleware Setup
+app.use(cors());
+app.use(express.json({ limit: '5mb' })); // Large requests ke liye
+app.use(express.static(path.join(__dirname, 'public')));
 
-// API Endpoint (Route)
+// 6. API Endpoint (Route)
 app.post('/moderate', async (req, res) => {
-  
-  const textToAnalyze = req.body.text;
+
+  let textToAnalyze = req.body.text;
+  let wasTruncated = false;
 
   if (!textToAnalyze) {
     return res.status(400).json({ error: 'Text is required in the request body.' });
   }
 
+  // Handle empty string specifically, as API might fail
+  if (textToAnalyze.trim() === '') {
+      console.log('[INFO] Empty text received. Returning safe.');
+      return res.status(200).json({
+          status: 'safe',
+          totalAggression: 0,
+          scores: {},
+          wasTruncated: false
+      });
+  }
+
+
+  if (Buffer.byteLength(textToAnalyze, 'utf8') > CHAR_LIMIT) {
+    textToAnalyze = Buffer.from(textToAnalyze, 'utf8').slice(0, CHAR_LIMIT).toString('utf8');
+    wasTruncated = true;
+    console.log(`[WARNING] Text was too long. Truncated to ${CHAR_LIMIT} bytes.`);
+  }
+
   try {
     const requestData = {
       comment: { text: textToAnalyze },
-      languages: ['en'], 
       requestedAttributes: {
         TOXICITY: {},
-        SPAM: {},
+        // SEVERE_TOXICITY is removed
+        IDENTITY_ATTACK: {},
         INSULT: {},
+        PROFANITY: {},
+        THREAT: {}
       },
     };
 
     const response = await axios.post(API_URL, requestData);
+    const attributes = response.data.attributeScores || {};
 
-    // 1. Google ke response se scores nikalna
-    const attributes = response.data.attributeScores;
+    const scores = {};
+    for (const attr in attributes) {
+        if (attributes[attr] && attributes[attr].summaryScore && attributes[attr].summaryScore.value !== undefined) {
+          scores[attr] = parseFloat(attributes[attr].summaryScore.value.toFixed(2));
+        } else {
+            // It's normal for some attributes to be missing if undetected, don't warn
+            scores[attr] = 0;
+        }
+    }
 
-    // 2. Scores ko round karna (e.g., 0.92345 ko 0.92 banana)
-    const toxicityScore = parseFloat(attributes.TOXICITY.summaryScore.value.toFixed(2));
-    const spamScore = parseFloat(attributes.SPAM.summaryScore.value.toFixed(2));
-    const insultScore = parseFloat(attributes.INSULT.summaryScore.value.toFixed(2));
+    const aggressionScore =
+        (scores.TOXICITY || 0) +
+        (scores.IDENTITY_ATTACK || 0) +
+        (scores.INSULT || 0) +
+        (scores.PROFANITY || 0) +
+        (scores.THREAT || 0);
 
-    // 3. Ek 'status' decide karna. Hum 0.7 ko threshold (had) rakhte hain.
     let finalStatus = 'safe';
-    if (toxicityScore > 0.7 || insultScore > 0.7) {
+    if (aggressionScore > 0.7 || (scores.THREAT || 0) > 0.6) {
       finalStatus = 'toxic';
     }
 
-    // 4. Apna saaf (clean) JSON response tayyar karna
     const finalResponse = {
       status: finalStatus,
-      scores: {
-        TOXICITY: toxicityScore,
-        SPAM: spamScore,
-        INSULT: insultScore,
-      },
+      totalAggression: parseFloat(aggressionScore.toFixed(2)),
+      scores: scores,
+      wasTruncated: wasTruncated
     };
 
-    // Kamyab request ko server console par log karna
-    console.log(`[SUCCESS] Request processed. Status: ${finalStatus}, Toxicity: ${toxicityScore}`);
-
-    // 5. Client ko final, clean response bhejna
+    console.log(`[SUCCESS] Request processed. Status: ${finalStatus}, Aggression: ${aggressionScore}`);
     res.status(200).json(finalResponse);
 
   } catch (error) {
-    // Error Handling
-    // Hum error ki wajah log kar rahe hain
-    console.error(`[ERROR] Failed to analyze. Error: ${error.message}`);
-    res.status(500).json({ error: 'Failed to analyze text. Check API key and server logs.' });
+    // ----- UPDATED PROFESSIONAL ERROR HANDLING -----
+    console.error(`[ERROR] Failed to analyze. Full error: ${error.message}`);
+
+    let userErrorMessage = 'Could not analyze this text due to an API issue.';
+    let responseStatus = 'error'; // Use 'error' status for frontend
+
+    // Check if it's a Google API error
+    if (error.response && error.response.data && error.response.data.error) {
+      const googleError = error.response.data.error;
+      console.warn(`[HANDLED] Google API Error ${googleError.code}: ${googleError.message}`);
+
+      // Check specifically for the "und" language error
+      if (googleError.message && googleError.message.includes('languages: und')) {
+        userErrorMessage = 'The AI cannot determine the language of this input. Please use more text.';
+        responseStatus = 'unknown'; // Use 'unknown' for this specific case
+      } else {
+        // Use Google's message for other API errors
+        userErrorMessage = googleError.message;
+      }
+
+      // Send a successful (200) response with error info for the frontend
+      res.status(200).json({
+        status: responseStatus,
+        totalAggression: 0,
+        scores: {},
+        wasTruncated: false,
+        apiError: userErrorMessage // Send the user-friendly message
+      });
+
+    } else {
+      // If it's some other server error (not from Google API)
+      res.status(500).json({
+        error: 'Failed to analyze text due to an internal server issue.',
+        details: error.message
+      });
+    }
+    // ----- UPDATED CODE KHATAM -----
   }
 });
 
-// 4. Server ko "listen" (start) karna
-// ----- UPDATED CODE (HOST BINDING) -----
+// 7. Server ko "listen" (start) karna
 app.listen(PORT, HOST, () => {
-  // Log message ko bhi theek kar rahe hain
   console.log(`Server is running successfully on http://${HOST}:${PORT}`);
 });
-// ----- UPDATED CODE KHATAM -----
