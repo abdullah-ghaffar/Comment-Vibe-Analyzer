@@ -6,7 +6,7 @@ A full-stack web application that analyzes the "vibe" (sentiment and tone) of us
 
 ## Live Demo
 
-Check out the live application here: **[YOUR_VERCEL_DEPLOYMENT_URL](YOUR_VERCEL_DEPLOYMENT_URL)** ---
+Check out the live application here: **https://comment-vibe-analyzer-621cwm2hh-abdullah-ghaffars-projects.vercel.app/** ---
 
 ## The Problem
 
