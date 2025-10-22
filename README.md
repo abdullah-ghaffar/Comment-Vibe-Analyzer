@@ -1,104 +1,101 @@
-# TextModerator API
+# Comment Vibe Analyzer ✨
 
-A simple, high-speed API for analyzing and moderating user-generated text. It returns a clean JSON response identifying toxicity, spam, and other attributes.
+[![Deployed with Vercel](https://vercel.com/button)](YOUR_VERCEL_DEPLOYMENT_URL) A full-stack web application that analyzes the "vibe" (sentiment and tone) of user-provided text using the Google Perspective API, presenting results in a user-friendly interface.
+
+
+
+## Live Demo
+
+Check out the live application here: **[YOUR_VERCEL_DEPLOYMENT_URL](YOUR_VERCEL_DEPLOYMENT_URL)** ---
 
 ## The Problem
 
-Manually moderating user comments is slow, expensive, and inefficient. This API automates the process, protecting your platform from harmful content in real-time before it becomes a problem.
+Understanding the underlying tone and potential toxicity of online comments is crucial for maintaining healthy conversations. Raw API scores (like toxicity percentages) can be confusing for end-users. This tool aims to provide a more intuitive and engaging analysis of comment "vibes".
+
+---
 
 ## Features
 
-* **Real-time Analysis:** Get moderation results in milliseconds.
-* **Multi-Attribute Detection:** Scores text for `TOXICITY`, `SPAM`, `INSULT`, and more.
-* **Simple JSON Endpoint:** Clean, predictable request and response format.
-* **Powered By:** Google Perspective API (for high-accuracy detection).
+* **📈 Real-time Vibe Analysis:** Instantly analyzes text input using the Google Perspective API.
+* **🌍 Language Auto-Detection:** Automatically detects the language of the input text (best effort by the API).
+* **😊 Engaging UI:** Presents results using clear language and emojis (e.g., "Friendly & Safe", "Aggressive", "Threatening") instead of raw scores.
+* **📊 Detailed Report:** Shows the percentage scores for key analyzed attributes (Toxicity, Insult, Threat, etc.).
+* **⚙️ Robust Error Handling:** Gracefully handles API limitations, such as language detection failures or character limits, providing clear user feedback.
+* **✂️ Long Text Handling:** Automatically truncates input text exceeding the API's limit and notifies the user.
+* **💻 Simple Frontend:** Built with vanilla HTML, CSS, and JavaScript for easy understanding and modification.
+* **🚀 Deployable:** Ready for deployment on platforms like Vercel.
+
+---
 
 ## Tech Stack
 
-* **Backend:** Node.js, Express
-* **AI Moderation:** Google Perspective API
+* **Backend:** Node.js, Express.js
+* **Frontend:** HTML, CSS, Vanilla JavaScript
+* **API:** Google Perspective API
+* **Deployment:** Vercel
 
-## Getting Started
+---
 
-Follow these steps to run the project locally.
+## Getting Started (Local Setup)
 
-### 1. Prerequisites
+To run this project on your local machine:
 
-* Node.js (v18 or later)
-* NPM
-* A Google Perspective API Key. You can get a free key from the [Perspective API website](https://www.perspectiveapi.com/).
+### Prerequisites
 
-### 2. Installation
+* Node.js (v18 or later recommended)
+* npm (usually comes with Node.js)
+* A **Google Perspective API Key**.
+    * You need a Google Cloud Project.
+    * Enable the "Perspective Comment Analyzer API".
+    * Create API credentials. Get your key [here](https://developers.google.com/codelabs/setup-perspective-api).
 
-1.  Clone the repository:
+### Installation
+
+1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/abdullah-ghaffar/TextModerator-API.git)
+    git clone [https://github.com/your-username/TextModerator-API.git](https://github.com/your-username/TextModerator-API.git) # Replace with your repo URL
     cd TextModerator-API
     ```
-
-2.  Install all required packages:
+2.  **Install dependencies:**
     ```bash
     npm install
     ```
 
-### 3. Configuration
+### Configuration
 
-1.  Create a `.env` file in the root of the project.
-2.  Add your API key to this file:
+1.  Create a `.env` file in the root directory of the project.
+2.  Add your Google Perspective API Key to the `.env` file:
     ```env
-    PERSPECTIVE_API_KEY=your_google_api_key_goes_here
+    # .env
+    PERSPECTIVE_API_KEY=YOUR_GOOGLE_API_KEY_GOES_HERE
     ```
 
-### 4. Run the Server
+### Running the Application
 
-Start the local development server:
-```bash
-npm start
-The API will now be running at http://localhost:3000.
+1.  **Start the server:**
+    ```bash
+    node index.js
+    ```
+2.  Open your web browser and navigate to `http://localhost:3000`.
 
-API Usage
-The API has one primary endpoint for all moderation tasks.
+---
 
-POST /moderate
-Analyzes a string of text and returns the moderation scores.
+## API Endpoint
 
-Request Body: (application/json)
+While this is a full-stack app, the core backend logic resides in a single endpoint:
 
-JSON
+* **`POST /moderate`**
+    * **Request Body:** `{ "text": "User comment to analyze" }`
+    * **Response Body:** (Success) `{ status: "safe" | "toxic" | "unknown" | "error", totalAggression: number, scores: {...}, wasTruncated: boolean, apiError?: string }`
 
-{
-  "text": "This is a wonderful example comment."
-}
-Success Response (200 OK): The API returns a simple status (safe, toxic) and a detailed scores object.
+---
 
-JSON
+## Deployment
 
-{
-  "status": "safe",
-  "scores": {
-    "TOXICITY": 0.08,
-    "SPAM": 0.1,
-    "INSULT": 0.05
-  }
-}
-Example (Toxic Text):
+This application is configured for easy deployment on **Vercel**.
 
-Request:
-
-JSON
-
-{
-  "text": "You are a stupid idiot, I hate this."
-}
-Response:
-
-JSON
-
-{
-  "status": "toxic",
-  "scores": {
-    "TOXICITY": 0.92,
-    "SPAM": 0.2,
-    "INSULT": 0.88
-  }
-}
+1.  Ensure you have a `vercel.json` file (provided in the repository).
+2.  Push your code to a GitHub repository.
+3.  Import the repository into Vercel.
+4.  Add the `PERSPECTIVE_API_KEY` as an Environment Variable in your Vercel project settings.
+5.  Deploy! Vercel will automatically build and serve the application.
