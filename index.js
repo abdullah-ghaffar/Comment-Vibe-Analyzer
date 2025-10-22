@@ -11,6 +11,11 @@ const app = express();
 // 3. Port define karna (jahan server chalega)
 const PORT = process.env.PORT || 3000;
 
+// ----- NAYA CODE (HOST BINDING) -----
+// Hum host ko '0.0.0.0' par set kar rahe hain taake yeh public requests accept kare
+const HOST = '0.0.0.0';
+// ----- NAYA CODE KHATAM -----
+
 // .env file se API key haasil karna
 const API_KEY = process.env.PERSPECTIVE_API_KEY;
 // Google API ka URL
@@ -65,10 +70,8 @@ app.post('/moderate', async (req, res) => {
       },
     };
 
-    // ----- NAYA CODE (Logging) -----
     // Kamyab request ko server console par log karna
     console.log(`[SUCCESS] Request processed. Status: ${finalStatus}, Toxicity: ${toxicityScore}`);
-    // ----- NAYA CODE KHATAM -----
 
     // 5. Client ko final, clean response bhejna
     res.status(200).json(finalResponse);
@@ -82,6 +85,9 @@ app.post('/moderate', async (req, res) => {
 });
 
 // 4. Server ko "listen" (start) karna
-app.listen(PORT, () => {
-  console.log(`Server is running successfully on http://localhost:${PORT}`);
+// ----- UPDATED CODE (HOST BINDING) -----
+app.listen(PORT, HOST, () => {
+  // Log message ko bhi theek kar rahe hain
+  console.log(`Server is running successfully on http://${HOST}:${PORT}`);
 });
+// ----- UPDATED CODE KHATAM -----
