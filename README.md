@@ -53,8 +53,7 @@ To run this project on your local machine:
 
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/your-username/TextModerator-API.git](https://github.com/your-username/TextModerator-API.git) # Replace with your repo URL
-    cd TextModerator-API
+    git clone https://github.com/abdullah-ghaffar/Comment-Vibe-Analyzer.git
     ```
 2.  **Install dependencies:**
     ```bash
