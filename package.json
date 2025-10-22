@@ -1,0 +1,25 @@
+{
+  "name": "textmoderator-api",
+  "version": "1.0.0",
+  "description": "A simple, high-speed API for analyzing and moderating user-generated text. It returns a clean JSON response identifying toxicity, spam, and other attributes.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abdullah-ghaffar/TextModerator-API.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/abdullah-ghaffar/TextModerator-API/issues"
+  },
+  "homepage": "https://github.com/abdullah-ghaffar/TextModerator-API#readme",
+  "dependencies": {
+    "axios": "^1.12.2",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0"
+  }
+}
